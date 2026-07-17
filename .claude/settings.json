@@ -1,13 +1,38 @@
 {
-  "extraKnownMarketplaces": {
-    "divya-personal": {
-      "source": {
-        "source": "github",
-        "repo": "divyap-01/claude-code-personal"
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c '[ -d /Users/ddpda/Local/auntyskitchen ] && exit 0; K=\"$HOME/.divya-kit\"; if [ ! -d \"$K/skills\" ]; then S=\"${CLAUDE_PROJECT_DIR:-$PWD}/../claude-code-personal\"; if [ -d \"$S/skills\" ]; then ln -sfn \"$(cd \"$S\" && pwd -P)\" \"$K\"; else git clone --depth 1 \"https://${DIVYA_KIT_TOKEN:+x-access-token:${DIVYA_KIT_TOKEN}@}github.com/divyap-01/claude-code-personal.git\" \"$K\" >/dev/null 2>&1 || exit 0; fi; fi; CLAUDE_PLUGIN_ROOT=\"$K\" sh \"$K/bootstrap/link-kit.sh\" 1>&2; CLAUDE_PLUGIN_ROOT=\"$K\" exec python3 \"$K/hooks/inject-rules\"'"
+          }
+        ]
       }
-    }
-  },
-  "enabledPlugins": {
-    "divya-kit@divya-personal": true
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Edit|Write|NotebookEdit|Agent|Task|Workflow|mcp__supabase-production__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'K=\"$HOME/.divya-kit\"; [ -d \"$K/hooks\" ] || K=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; [ -f \"$K/hooks/agent-guard.py\" ] || exit 0; CLAUDE_PLUGIN_ROOT=\"$K\" exec python3 \"$K/hooks/agent-guard.py\"'",
+            "statusMessage": "Checking PR + freeze + box + prod-DB gates"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "sh -c 'K=\"$HOME/.divya-kit\"; [ -d \"$K/hooks\" ] || K=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; [ -f \"$K/hooks/job-clock.py\" ] || exit 0; CLAUDE_PLUGIN_ROOT=\"$K\" exec python3 \"$K/hooks/job-clock.py\"'",
+            "statusMessage": "Resetting the job clock"
+          }
+        ]
+      }
+    ]
   }
 }
