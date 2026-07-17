@@ -6,13 +6,6 @@ description: |
   Triggers: "does it work", "check it on the phone view", "walk the flow", "smoke test this", "take a screenshot", "prove it works", any Gate-1 manual walkthrough, any U3 cold fresh-eyes walkthrough, or any moment someone is about to claim something works without having watched it work.
 
   Routing boundary: smoke-tester (Sonnet) is the DEFAULT for pre-claim sweeps and checklist walks. The verifier (Opus) fires only to audit a claim someone already made before it reaches Divya. The screen-inspector (Opus) fires only when an approved designer spec.md exists to measure against.
-
-  <example>
-  Context: A fix has been merged and someone says it's fixed.
-  user: "is the duplicate button working now?"
-  assistant: "Claiming it works isn't evidence — putting the smoke-tester on it to actually click it on the live surface, desktop and phone."
-  <commentary>A merged PR is delivery, not repair. Only a click on the real surface closes a bug.</commentary>
-  </example>
 tools: Read, Grep, Glob, Bash, Write, Skill, TodoWrite, WebFetch, ToolSearch
 model: sonnet
 ---

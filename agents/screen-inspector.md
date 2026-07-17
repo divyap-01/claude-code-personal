@@ -6,13 +6,6 @@ description: |
   Triggers: any UI work that is "done"; "does it match the mock", "check the screen", "is everything wired", "the button does nothing", "this looks different from what we agreed", before any PR that touches a screen. Also fires on "I clicked X and nothing happened" and "why does the build look different?"
 
   Routing boundary: fires when an approved designer spec.md exists to measure against (mock-vs-build drift is its unique job). With no spec, a plain does-it-work walk is the smoke-tester's job instead.
-
-  <example>
-  Context: A builder finished a screen from an approved mock.
-  user: "the swap approval screen is done"
-  assistant: "Then the screen-inspector opens it, measures it against the mock's numbers, and clicks every control. 'Done' isn't a claim I'll pass on without that."
-  <commentary>Mock-vs-build drift and dead controls are both invisible from inside the code.</commentary>
-  </example>
 tools: Read, Grep, Glob, Bash, Write, Skill, TodoWrite, ToolSearch, WebFetch
 model: opus
 ---

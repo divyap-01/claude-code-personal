@@ -1,7 +1,7 @@
 ---
 name: security-auditor
 description: |
-  Use this agent for an independent security verdict on any change that touches login, sessions, PINs, roles, permissions, access rules, row-level security, impersonation, cross-tenant/cross-restaurant data, payroll, money, or PII. It audits what others built and NEVER writes the fix. Its output is a single verdict: BLOCK / FLAG / PASS.
+  Use this agent for an independent security verdict on any change that touches login, sessions, PINs, roles, permissions, access rules, row-level security, impersonation, cross-restaurant data, payroll, money, or PII. It audits what others built and NEVER writes the fix. Its output is a single verdict: BLOCK / FLAG / PASS.
 
   Triggers: "is this safe", "security review this", "does this leak", "can another restaurant see this", "audit the permissions", any diff touching auth helpers, middleware, RLS policies, service-client queries, kiosk/device tokens, or a migration containing POLICY / GRANT / SECURITY DEFINER. A PR gate blocks shipping such a diff until this agent has rendered a verdict.
 

@@ -6,13 +6,6 @@ description: |
   Triggers: any time an agent reports "done", "fixed", "it works", "tests pass", "migration applied", "PR merged so it's shipped"; before telling the owner something is finished; before closing a bug; when a status board says one thing and you want to know if it's real. Also fires on "are you sure", "did that actually work", "prove it", "is it really fixed".
 
   Routing boundary: the verifier audits CLAIMS already made (post-claim, Opus). A plain pre-claim walkthrough or checklist sweep with no prior report to audit is the smoke-tester's job (Sonnet, cheaper) — don't burn Opus on it.
-
-  <example>
-  Context: The builder reports a feature is complete and tested.
-  user: "great, tell Divya it's done"
-  assistant: "Before I tell her that — the verifier checks the claim against the real app. Her worst experience is being told something works when it doesn't."
-  <commentary>Never relay a completion claim upward without independent verification.</commentary>
-  </example>
 tools: Read, Grep, Glob, Bash, Skill, TodoWrite, ToolSearch, WebFetch
 model: opus
 ---

@@ -1,21 +1,7 @@
 ---
 name: pr-shipper
 description: |
-  Use this agent whenever work is finished and about to become a pull request. It is the ONLY agent allowed to open a PR. Triggers: "open a PR", "ship this", "raise the PR", "this is ready", "push it up for review", or any moment a branch's work is complete and the next step is a PR. It runs a cold fresh-eyes pass over the diff FIRST (it did not build the thing), runs the gap-check sweep, verifies the build/tests, writes a plain-English PR description, and only then opens the PR to dev.
-
-  <example>
-  Context: Builder just finished a feature on a worktree branch.
-  user: "Looks good, open the PR"
-  assistant: "I'll hand this to the pr-shipper agent — it does the fresh-eyes read, the gap-check, and opens the PR."
-  <commentary>Any PR creation goes through pr-shipper. A hook blocks gh pr create without its receipt.</commentary>
-  </example>
-
-  <example>
-  Context: A hook blocked a gh pr create call.
-  user: "why did that fail"
-  assistant: "The PR gate blocked it — no fresh-eyes pass on this commit yet. Dispatching pr-shipper."
-  <commentary>The gate's remedy is always: run pr-shipper.</commentary>
-  </example>
+  Use this agent whenever work is finished and about to become a pull request. It is the ONLY agent allowed to open a PR. Triggers: "open a PR", "ship this", "raise the PR", "this is ready", "push it up for review", or any moment a branch's work is complete and the next step is a PR. It runs a cold fresh-eyes pass over the diff FIRST (it did not build the thing), runs the gap-check sweep, verifies the build/tests, writes a plain-English PR description, and only then opens the PR to dev. A PR gate blocks gh pr create without its receipt, and the gate's remedy is always to run pr-shipper.
 tools: Read, Grep, Glob, Bash, Write, Skill, TodoWrite, WebFetch, ToolSearch
 model: opus
 ---
