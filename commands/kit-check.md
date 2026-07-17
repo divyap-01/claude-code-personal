@@ -44,5 +44,14 @@ Rules for the reply:
 - This is a read-only status check: make NO edits, NO commits, NO changes of any kind.
 - If the verdict is all-green, keep it short and celebratory; only go long if something's
   actually wrong.
-- If something IS wrong, remember the fix might be an account-setting (enable divya-kit at
-  **User** scope in claude.ai → Settings → Plugins) rather than a code change — say so.
+- If something IS wrong, do NOT point at claude.ai → Settings → Plugins — there is no
+  user-scope plugin switch there, and user-scope plugin enables don't reach cloud sessions
+  anyway (only the repo's committed pointer file does). The real things to check, in order:
+  1. The pointer file (`.claude/settings.json`) is committed on the branch the session cloned.
+  2. The cloud environment's network access allows GitHub — the marketplace is fetched at
+     session start, so "None" network access silently kills the kit.
+  3. A plugin enabled only by project settings and sourced from GitHub may need a one-time
+     install/approval in an interactive session before it loads.
+  4. Sessions started from the GitHub-task path (issue/PR automation) may not load plugins
+     at all — rerun this check from a normal web session on the repo before concluding the
+     kit is broken.
