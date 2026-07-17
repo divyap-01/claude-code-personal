@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "divya-personal": {
+      "source": {
+        "source": "github",
+        "repo": "divyap-01/claude-code-personal"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "divya-kit@divya-personal": true
+  }
+}
