@@ -16,7 +16,7 @@ safety gates.
 |---|---|
 | `agents/` | The 12 agents of the org — planner, builder, pr-shipper, migration-steward, security-auditor, verifier, debugger, smoke-tester, designer, screen-inspector, repo-steward, explainer. |
 | `skills/divya-working-style/` | The global working-style rulebook (her `~/.claude/CLAUDE.md`). Auto-injected at session start in the cloud. |
-| `commands/` | `/aside`, `/brainstorm`, `/write-plan`, `/execute-plan`. |
+| `commands/` | `/aside`, `/brainstorm`, `/write-plan`, `/execute-plan` (as a plugin: `/divya-kit:aside`, etc.). |
 | `reference/` | Docs the rulebook and agents cross-reference — cost doctrine, design rules, agent failures log. |
 | `hooks/` | The safety gates (`agent-guard.py`), the box-gate clock (`job-clock.py`), and the rulebook injector (`inject-rules`). |
 
@@ -83,7 +83,11 @@ that repo — `.claude/settings.json`:
 - **Per repo:** every project you want the kit on gets this file, once. There is no global
   path — that's the documented trade-off, not a missing setting.
 - This repo already carries the file (dogfood): open a fresh cloud session on it and run
-  `/kit-check` or `/debugging-protocol` to confirm the kit loaded.
+  `/divya-kit:kit-check` to confirm the kit loaded.
+- **Names are namespaced when loaded as a plugin.** Everything the kit provides answers to
+  `/divya-kit:<name>` — e.g. `/divya-kit:kit-check`, `/divya-kit:debugging-protocol` — never
+  the bare name. Type `/div` and let autocomplete list the whole kit. (Bare names like
+  `/kit-check` only exist locally via the standalone `~/.claude/` copies.)
 
 > Heads-up: enabling the plugin in a repo also switches on its **gates** (PR / freeze /
 > box) for that repo's sessions. That's intended for product repos; if you ever want a

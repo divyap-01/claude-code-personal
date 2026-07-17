@@ -47,6 +47,11 @@ Rules for the reply:
 - If something IS wrong, do NOT point at claude.ai → Settings → Plugins — there is no
   user-scope plugin switch there, and user-scope plugin enables don't reach cloud sessions
   anyway (only the repo's committed pointer file does). The real things to check, in order:
+  0. **Namespacing first** — loaded as a plugin, every command/skill answers to
+     `/divya-kit:<name>` (e.g. `/divya-kit:kit-check`), never the bare name.
+     "Unknown command: /kit-check" proves nothing about whether the kit loaded; type
+     `/div` and see what autocompletes before any other debugging. (Bare names exist
+     only locally via the standalone `~/.claude/` copies.)
   1. The pointer file (`.claude/settings.json`) is committed on the branch the session cloned.
   2. The cloud environment's network access allows GitHub — the marketplace is fetched at
      session start, so "None" network access silently kills the kit.
