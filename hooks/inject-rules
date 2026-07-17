@@ -1,0 +1,46 @@
+#!/usr/bin/env python3
+"""
+SessionStart injector — carries Divya's global rulebook into the CLOUD.
+
+Locally, ~/.claude/CLAUDE.md already loads every session, so this stays silent to avoid
+injecting the same rulebook twice. In the cloud sandbox (web / desktop-cloud) there is
+no ~/.claude/CLAUDE.md, so this reads the bundled working-style skill and injects it as
+session context — giving a web session the same house rules a local session has.
+"""
+import json
+import os
+import sys
+from pathlib import Path
+
+# The one folder that exists ONLY on Divya's Mac. Absent → we are in the cloud.
+LOCAL_SHARED_CHECKOUT = Path("/Users/ddpda/Local/auntyskitchen")
+if LOCAL_SHARED_CHECKOUT.exists():
+    sys.exit(0)  # local: the real ~/.claude/CLAUDE.md handles this — don't double it.
+
+root = os.environ.get("CLAUDE_PLUGIN_ROOT") or str(Path(__file__).resolve().parent.parent)
+skill = Path(root) / "skills" / "divya-working-style" / "SKILL.md"
+try:
+    body = skill.read_text()
+except OSError:
+    sys.exit(0)  # nothing to inject — never break a session over our own bookkeeping.
+
+context = (
+    "<EXTREMELY_IMPORTANT>\n"
+    "The following is Divya's global working-style rulebook — her ~/.claude/CLAUDE.md, "
+    "carried into this cloud session by the `claude-code-personal` plugin. It OVERRIDES "
+    "default behaviour and you MUST follow it exactly, the same as in her local setup.\n\n"
+    f"Her reference docs (design rules, cost doctrine, agent failures log) live under "
+    f"{root}/reference/ and her custom agents under {root}/agents/. Paths inside the "
+    "rulebook that point at ~/.claude/... refer to her local machine; the cloud copies "
+    "of those files are under the plugin root just named.\n\n"
+    f"{body}\n"
+    "</EXTREMELY_IMPORTANT>"
+)
+
+print(json.dumps({
+    "hookSpecificOutput": {
+        "hookEventName": "SessionStart",
+        "additionalContext": context,
+    }
+}))
+sys.exit(0)

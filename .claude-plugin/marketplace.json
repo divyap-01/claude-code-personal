@@ -1,0 +1,15 @@
+{
+  "name": "divya-personal",
+  "description": "Divya's personal Claude Code marketplace",
+  "owner": {
+    "name": "Divya"
+  },
+  "plugins": [
+    {
+      "name": "divya-kit",
+      "description": "Personal agents, skills, commands, working-style rulebook, and cloud-safe gates",
+      "version": "0.1.0",
+      "source": "./"
+    }
+  ]
+}
