@@ -45,13 +45,19 @@ Rules for the reply:
 - If the verdict is all-green, keep it short and celebratory; only go long if something's
   actually wrong.
 - If something IS wrong, do NOT point at claude.ai → Settings → Plugins — there is no
-  user-scope plugin switch there, and user-scope plugin enables don't reach cloud sessions
-  anyway (only the repo's committed pointer file does). The real things to check, in order:
-  1. The pointer file (`.claude/settings.json`) is committed on the branch the session cloned.
-  2. The cloud environment's network access allows GitHub — the marketplace is fetched at
-     session start, so "None" network access silently kills the kit.
-  3. A plugin enabled only by project settings and sourced from GitHub may need a one-time
-     install/approval in an interactive session before it loads.
-  4. Sessions started from the GitHub-task path (issue/PR automation) may not load plugins
-     at all — rerun this check from a normal web session on the repo before concluding the
-     kit is broken.
+  user-scope plugin switch there, and the plugin route as a whole is dead in the cloud
+  (a trust gate stops project-enabled external plugins from auto-installing). The kit
+  loads via the **bootstrap hooks** in `.claude/settings.json` (copied from the kit's
+  `bootstrap/project-settings.json`), which link the kit into the session under BARE
+  names (`/kit-check`, no `divya-kit:` prefix). Check, in order:
+  1. The settings file with the bootstrap hooks is committed on the branch the session
+     cloned (`.claude/settings.json`, SessionStart hook present).
+  2. The kit actually arrived: does `~/.divya-kit/skills/` exist, and does the project's
+     `.claude/skills/` contain symlinks? If not, the clone failed — the kit repo is
+     private, so a session on any OTHER repo needs either a `DIVYA_KIT_TOKEN` env var in
+     the cloud environment, the kit repo added as a second source, or the kit repo made
+     public.
+  3. The cloud environment's network access allows GitHub — "None" silently kills the
+     clone.
+  4. Hooks fired at all: some session types may not run SessionStart hooks — check
+     whether the rulebook (`<EXTREMELY_IMPORTANT>` block) is in context.
