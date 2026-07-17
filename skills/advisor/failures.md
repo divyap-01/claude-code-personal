@@ -1,0 +1,15 @@
+# advisor — failure log (incident book)
+
+Every engagement-framing failure gets an entry, logged in the same session it's noticed (see "Self-Improvement Loop" in SKILL.md). Format per entry: **date • engagement • tripwire • what the framing said vs what happened • patch produced.** An entry with no patch line is itself a violation.
+
+---
+
+## 2026-07-03 • LIVE (Divya) — engagements ran without pinning WHERE • scoping-miss class, arriving through every front door
+- **Tripwire:** the user learned only after reading results which target an engagement had used ("this ran on dev, but what I actually want is production"). Patched same-day inside the audit skill — but the advisor is the front door for every OTHER engagement type (migration lead, performance engineer, security reviewer) and still let code-ref and DB-target default silently.
+- **What happened:** "scope (how wide)" was asked; "WHICH code × WHICH data" never was.
+- **Patch produced (2026-07-05):** the mandatory TARGET question for anything touching code or data (dev tip / production / local copy × preview / production / both, with "Live health check" and "Pre-merge check" combos); the Target-pinning prompt block (fetch, pinned SHA, read-only snapshot, DB named by project id, target restated in the deliverable header); the "When blocked — never substitute a target" rule.
+
+## 2026-07-05 • five-lens panel + two baseline tests (pre-upgrade) • excellence was ambient, not enforced
+- **Tripwire (meta):** the audit-shaped baseline had to IMPROVISE its routing decision (keep advisor as scoper, fold in the audit skill's scope question, tell the prompt to invoke the skill if installed) because the skill text contained no routing rule — a different session could just as easily hand-write a weaker parallel auditor. The build-shaped baseline produced an excellent brief carrying worktree/TDD/scenario-mapping/gap-check — but sourced entirely from ambient project context (its brief said "Read /CLAUDE.md at the repo root," which only works in-repo), and it never made invoking the Skill tool the expert's first action. Both baselines ended with the trailing "run it now or hand off?" ask — a built-in second question round on every single engagement.
+- **What happened:** routing, inheritance, and question discipline all lived in the model's judgment + this project's context, not in the skill; portability = zero.
+- **Patch produced:** Step 0 route-first (invoke matching skills, never reimplement; paste-elsewhere prompts open with the literal Skill-tool invocation); the work-type-keyed inheritance checklist as OPENING BLOCKING instructions with mechanics inlined for foreign environments; the run-here-vs-hand-off fork folded into the ONE batch; zero-question fast path + >4-forks rule + proceed-on-defaults path + addendum rule; cold-run gate; budget + stop rule; plain-English acceptance checks; prompt-library save (docs/dba/prompts/); post-run verification of rails + deliverable before relaying; rails-vs-mission collision check (from the audit skill's recorded 2026-07-03 rail collision); Self-Improvement Loop + this incident book.
