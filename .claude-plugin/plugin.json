@@ -1,7 +1,7 @@
 {
   "name": "divya-kit",
   "description": "Divya's personal Claude Code kit — agents, skills, commands, working-style rulebook, and cloud-safe gates. One tiny pointer file per project repo loads it in the cloud.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "Divya"
   }

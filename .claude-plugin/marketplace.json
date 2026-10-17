@@ -8,7 +8,7 @@
     {
       "name": "divya-kit",
       "description": "Personal agents, skills, commands, working-style rulebook, and cloud-safe gates",
-      "version": "0.3.0",
+      "version": "0.4.0",
       "source": "./"
     }
   ]
