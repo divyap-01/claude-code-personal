@@ -60,7 +60,9 @@ A new finding is a **new PR**. Always.
 **Enforced — Wall 3.** The freeze marker is written automatically by the PR gate the moment
 a PR is cleared, so nobody has to remember to set it. Docs and merge-conflict resolution are
 exempt. Divya may override (`~/.claude/.allow-frozen-branch`) — **that is her call to make,
-never yours to assume.**
+never yours to assume.** A repository can switch this wall off for itself with a
+`.claude/no-branch-freeze` file (KitchenHQ did, CEO ruling 2026-08-21: a feature merges once,
+so its branch stays open by design); the guard honours that file locally and in the cloud.
 
 ### 4. The box: 2 hours. (everyone, and above all the main conversation)
 **Enforced — Wall 4.** More than 2 hours since Divya last spoke → **agent/workflow dispatch is

@@ -201,3 +201,21 @@ notes with the file tools, not Bash heredocs. (Seen shipping PR #2571.)
 - **Cost:** one extra fix wave on the same branch before PR. No user impact (caught pre-merge — the U3 gate worked as designed).
 - **Root cause:** U2's entrance list enumerated where a human LANDS, never which code path CREATES the record the feature hangs on. A creator that emits a different record shape is an entrance the audit never saw.
 - **Patched:** planner.md step 4b added — creator-entrance audit (grep every creator of the anchor record; verify each produces the shape the plan depends on) is now part of U2.
+
+### 2026-10-17 — agent-guard (PR gate) — blocked a documentation write because its text quoted the PR-creation command
+**What happened:** a cloud session wrote a review report to its scratchpad with a shell heredoc; the report quoted the CLI's PR-creation command in prose, and the PR gate string-matched it and refused the write. The 2026-07-13 entry above records the same false positive and a workaround ("use the file tools"); three months later the hook was unchanged and the workaround had become the rule.
+**What it cost:** one blocked write and a rewrite with the phrase reworded; more broadly, every session since July paying a workaround tax.
+**Root cause:** the gate matched the phrase anywhere in the command text, including heredoc bodies that are only stored (file writes, commit messages).
+**Patched:** `agent-guard.py` now blanks heredoc bodies whose consumer is `cat`, `tee` or `git commit` before matching; bodies fed to `bash`, `sh`, `python` or any other interpreter stay gated. Covered by `hooks/tests/test_agent_guard.py` (cases 3, 4, 5, 6).
+
+### 2026-10-17 — agent-guard (PR gate) — never saw a PR opened through the GitHub connector
+**What happened:** cloud sessions have no signed-in `gh`, so their PRs go through the GitHub connector tool. The hook matcher watched Bash, Edit, Write and dispatch only, so a connector PR needed no pr-shipper receipt and no security receipt. The README said the PR gate worked in the cloud.
+**What it cost:** KitchenHQ #6551 was opened from a cloud session with no receipt check at all; the review happened by convention, not by the wall.
+**Root cause:** the wall was written for the shell and the cloud route was added later without extending it.
+**Patched:** `hooks.json` now matches `mcp__github__create_pull_request`; `connector_pr_gate` resolves the head branch's commit in the session's clone and runs the same `receipt_gate` the CLI path uses, including the security receipt on a sensitive diff. Other repositories are left alone. Covered by the rig (cases 7 to 10).
+
+### 2026-10-17 — agent-guard (freeze gate) — ignored a repository's own freeze-off ruling in the cloud
+**What happened:** KitchenHQ switched Wall 3 off for itself on 2026-08-21 with a committed `.claude/no-branch-freeze` file (features merge once; branches stay open by design). The local guard was taught to honour it; the plugin copy that runs in the cloud never was, so a cloud session would freeze a branch the CEO had ruled must stay open.
+**What it cost:** nothing observed, because the PR gate that writes the marker never fired on connector PRs (previous entry). Fixing that entry would have exposed this one.
+**Root cause:** two copies of the guard, patched separately.
+**Patched:** `freeze_off()` reads `<repo>/.claude/no-branch-freeze`; `set_freeze` writes no marker and `freeze_gate` stands down when it exists. The cost doctrine's rule 3 now says so. Covered by the rig (cases 11 and 12).

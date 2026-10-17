@@ -14,7 +14,7 @@
     ],
     "PreToolUse": [
       {
-        "matcher": "Bash|Edit|Write|NotebookEdit|Agent|Task|Workflow|mcp__supabase-production__.*",
+        "matcher": "Bash|Edit|Write|NotebookEdit|Agent|Task|Workflow|mcp__supabase-production__.*|mcp__github__create_pull_request",
         "hooks": [
           {
             "type": "command",

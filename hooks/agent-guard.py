@@ -2,9 +2,9 @@
 """
 Agent guard — the hard walls of the agent org.
 
-  WALL 1 (PR gate)        no `gh pr create` without a fresh-eyes receipt for the exact
-                          commit being shipped, plus a security verdict if the diff is
-                          sensitive.
+  WALL 1 (PR gate)        no `gh pr create` — and no PR through the GitHub connector —
+                          without a fresh-eyes receipt for the exact commit being
+                          shipped, plus a security verdict if the diff is sensitive.
   WALL 2 (worktree gate)  no editing CODE in the main checkout — via the Edit/Write
                           tools OR the shell (sed -i, tee, redirects, git checkout/
                           merge). Docs and agent config are fine.
@@ -172,6 +172,42 @@ PR_CREATE = re.compile(
     r"|\bcurl\b[^;|&]*api\.github\.com[^;|&]*/pulls\b"
 )
 
+# A heredoc whose consumer only STORES text — a file write (cat, tee) or a commit
+# message (git commit -F -) — is prose, not a command. Matching the PR phrase inside
+# one blocked real documentation writes (logged 2026-07-13, fired again 2026-10-17).
+# Bodies fed to an interpreter (bash, sh, python, eval…) are NOT stripped: those can
+# run the command for real, so they stay gated.
+TEXT_CONSUMER = re.compile(r"^\s*(?:cat|tee|git\b[^\n<]*\bcommit)\b")
+HEREDOC_START = re.compile(r"(?<!<)<<-?(?!<)\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def strip_text_heredocs(command):
+    """The command with every text-only heredoc body blanked out, line count kept."""
+    lines = command.split("\n")
+    out, i = [], 0
+    while i < len(lines):
+        line = lines[i]
+        m = HEREDOC_START.search(line)
+        if m:
+            # The simple command that owns this heredoc: back to the last separator.
+            head = re.split(r"[;&|(]", line[: m.start()])[-1]
+            if TEXT_CONSUMER.match(head):
+                tag = m.group(2)
+                dash = line[m.start(): m.end()].startswith("<<-")
+                out.append(line)
+                i += 1
+                while i < len(lines):
+                    body = lines[i]
+                    i += 1
+                    if (body.lstrip("\t") if dash else body) == tag:
+                        out.append(body)
+                        break
+                    out.append("")
+                continue
+        out.append(line)
+        i += 1
+    return "\n".join(out)
+
 
 # ------------------------------------------------------- TRIPWIRE: the promote gate
 # Production is sometimes OWED migrations that must be applied before dev code reaches
@@ -262,11 +298,12 @@ def mcp_gate(tool, tool_input):
 def pr_gate(command, cwd):
     if (HOME / ".claude" / ".allow-ungated-pr").exists():
         return
-    m = PR_CREATE.search(command)
+    text = strip_text_heredocs(command)
+    m = PR_CREATE.search(text)
     if not m:
         return
 
-    wd = effective_dir(command, cwd, before=m.start())
+    wd = effective_dir(text, cwd, before=m.start())
     # Only guard THIS project. Other repos are none of our business.
     # --path-format=absolute matters: the bare form returns a path relative to `wd`,
     # which then resolves against the HOOK's cwd and silently disarms the gate.
@@ -290,6 +327,11 @@ def pr_gate(command, cwd):
             "  cd /path/to/.worktrees/<feature> && gh pr create ...\n"
         )
 
+    receipt_gate(wd, sha)
+
+
+def receipt_gate(wd, sha, branch=None):
+    """The receipt checks every PR passes through, however it is being opened."""
     if not (RECEIPTS / f"{sha}.pr-shipper").exists():
         block(
             f"🚧 PR GATE — blocked. No fresh-eyes review on this commit ({sha[:8]}).\n\n"
@@ -305,7 +347,7 @@ def pr_gate(command, cwd):
     # This ONE check fails CLOSED: `sh` returning None means the diff itself failed
     # (stale/missing origin/dev, timeout) — not that the diff is empty. Waiving the
     # security wall because git hiccuped is the worst possible default.
-    files = sh(["git", "diff", "--name-only", "origin/dev...HEAD"], cwd=wd)
+    files = sh(["git", "diff", "--name-only", f"origin/dev...{sha}"], cwd=wd)
     if files is None:
         block(
             "🔒 SECURITY GATE — blocked. I couldn't read the diff against origin/dev, so I\n"
@@ -332,9 +374,40 @@ def pr_gate(command, cwd):
 
     # Cleared to ship → the branch is now FROZEN (Wall 3). Done here, at the one point
     # every PR must pass through, precisely so that nobody has to remember to do it.
-    branch = branch_of(wd)
+    branch = branch or branch_of(wd)
     if branch:
         set_freeze(wd, branch, sha)
+
+
+# The same wall for a PR opened through the GitHub connector. Cloud sessions have no
+# signed-in `gh`, so that is how their PRs are made — and until 2026-10-17 it walked
+# straight past this gate, which only watched the shell.
+CONNECTOR_PR_TOOLS = ("mcp__github__create_pull_request",)
+
+
+def connector_pr_gate(tool, tool_input):
+    if tool not in CONNECTOR_PR_TOOLS:
+        return
+    if (HOME / ".claude" / ".allow-ungated-pr").exists():
+        return
+    owner = str(tool_input.get("owner", "") or "")
+    repo = str(tool_input.get("repo", "") or "")
+    origin = (sh(["git", "remote", "get-url", "origin"], cwd=REPO) or "").lower()
+    if not owner or not repo or f"{owner}/{repo}".lower() not in origin.replace(".git", ""):
+        return  # some other repository — none of our business
+    head = str(tool_input.get("head", "") or "")
+    sha = None
+    for ref in ([head, f"refs/remotes/origin/{head}"] if head else []):
+        sha = sh(["git", "rev-parse", "--verify", "--quiet", ref + "^{commit}"], cwd=REPO)
+        if sha:
+            break
+    if not sha:
+        block(
+            "🚧 PR GATE — I can't tell which commit you're shipping.\n\n"
+            f"The head branch `{head}` is not known to this clone. Push the branch you mean\n"
+            "to ship (or fetch it), then retry.\n"
+        )
+    receipt_gate(REPO, sha, branch=head)
 
 
 # ------------------------------------------------------ TRIPWIRE: the lane-diary gate
@@ -548,8 +621,17 @@ def branch_of(wd):
     return b if b and b != "HEAD" else None
 
 
+def freeze_off():
+    """A repository may switch Wall 3 off for itself with `.claude/no-branch-freeze`
+    (KitchenHQ: CEO ruling 2026-08-21, a feature merges once, so its branch stays open
+    by design). The file travels with the repo, so the ruling holds in the cloud too."""
+    return (REPO / ".claude" / "no-branch-freeze").exists()
+
+
 def set_freeze(wd, branch, sha):
     """Called by Wall 1 the moment a PR is cleared to open. Nobody has to remember."""
+    if freeze_off():
+        return
     try:
         FREEZE.mkdir(parents=True, exist_ok=True)
         (FREEZE / freeze_slug(branch)).write_text(
@@ -563,16 +645,19 @@ def freeze_gate(command, cwd):
     """A branch that has shipped its PR is CLOSED. New finding = new PR."""
     if (HOME / ".claude" / ".allow-frozen-branch").exists():
         return
-    m = GIT_COMMIT_PUSH.search(command)
+    if freeze_off():
+        return
+    text = strip_text_heredocs(command)
+    m = GIT_COMMIT_PUSH.search(text)
     if not m:
         return
     # The shipping command itself is exempt: `git push && gh pr create` is governed by
     # Wall 1, which writes the freeze marker BEFORE the command runs — without this
     # the marker blocks the very push that ships the PR (fired for real, PR #2571).
-    if PR_CREATE.search(command):
+    if PR_CREATE.search(text):
         return
 
-    wd = effective_dir(command, cwd, before=m.start())
+    wd = effective_dir(text, cwd, before=m.start())
     branch = branch_of(wd)
     if not branch:
         return
@@ -707,6 +792,7 @@ def main():
         freeze_gate(command, cwd)
         bash_worktree_gate(command, cwd)
     else:
+        connector_pr_gate(tool, tool_input)
         worktree_gate(tool, tool_input)
 
     sys.exit(0)

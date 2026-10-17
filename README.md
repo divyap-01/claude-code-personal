@@ -29,9 +29,9 @@ its own instead of assuming a fixed folder.
 
 | Gate | Local (your Mac) | Cloud (web/desktop) |
 |---|---|---|
-| PR gate (no un-reviewed PR) | ✅ (via `~/.claude/hooks`) | ✅ |
-| Freeze gate (shipped branch is closed) | ✅ | ✅ |
-| Box gate (stop after 2 idle hrs) | ✅ | ✅ |
+| PR gate (no un-reviewed PR) | ✅ (via `~/.claude/hooks`) | ✅ for `gh` and for the GitHub connector's create-PR tool (the cloud's only route, gated since 0.5.0) |
+| Freeze gate (shipped branch is closed) | ✅ | ✅ — and a repo that commits `.claude/no-branch-freeze` switches it off for itself, everywhere (0.5.0) |
+| Box gate (stop after 2 idle hrs) | ✅ | ✅ — note it also stops agent dispatch in a cloud job you set and left; her next message in that session reopens it |
 | Promote gate (owed migrations block main) | ✅ | ✅ if the owed-list is present |
 | Prod-DB gate (no writes to production) | ✅ | ✅ |
 | Migration-name gate | ✅ | ✅ |
@@ -40,6 +40,11 @@ its own instead of assuming a fixed folder.
 
 Locally every cloud hook exits immediately (the standalone `~/.claude/hooks` already do
 the work); they only activate in the cloud.
+
+The rulebook injected at session start names the kit version it came from
+(`divya-kit vX.Y.Z`); if that is behind this repo's `plugin.json`, update or reinstall the
+plugin in the claude.ai Plugins panel. The guard's test rig is `hooks/tests/test_agent_guard.py`;
+run it after any change to `agent-guard.py` and quote what it refuses.
 
 ## Enable it
 

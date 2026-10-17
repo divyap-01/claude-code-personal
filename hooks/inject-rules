@@ -24,16 +24,39 @@ try:
 except OSError:
     sys.exit(0)  # nothing to inject — never break a session over our own bookkeeping.
 
+# Which version of the kit this is, so a stale cloud copy is visible from inside a session.
+try:
+    version = json.loads((Path(root) / ".claude-plugin" / "plugin.json").read_text()).get("version", "?")
+except (OSError, ValueError):
+    version = "?"
+
+# A project that owns its agents (.claude/agents/ in the repo) outranks the kit's copies:
+# agent tooling is project-owned where the project says so, and the kit's copies drift.
+try:
+    payload = json.load(sys.stdin)
+except Exception:
+    payload = {}
+project = os.environ.get("CLAUDE_PROJECT_DIR") or payload.get("cwd") or ""
+owned = ""
+if project and any(Path(project).glob(".claude/agents/*.md")):
+    owned = (
+        "\n\nTHIS PROJECT OWNS ITS AGENTS: it has its own .claude/agents/. Dispatch those "
+        "(the unprefixed names). The `divya-kit:` copies are the kit's older versions and "
+        "are not to be used here. Where a project skill and a kit skill share a name, the "
+        "project's wins.\n"
+    )
+
 context = (
     "<EXTREMELY_IMPORTANT>\n"
     "The following is Divya's global working-style rulebook — her ~/.claude/CLAUDE.md, "
-    "carried into this cloud session by the `claude-code-personal` plugin. It OVERRIDES "
+    f"carried into this cloud session by the `claude-code-personal` plugin (divya-kit v{version}). It OVERRIDES "
     "default behaviour and you MUST follow it exactly, the same as in her local setup.\n\n"
     f"Her reference docs (design rules, cost doctrine, agent failures log) live under "
     f"{root}/reference/ and her custom agents under {root}/agents/. Paths inside the "
     "rulebook that point at ~/.claude/... refer to her local machine; the cloud copies "
     "of those files are under the plugin root just named.\n\n"
     f"{body}\n"
+    f"{owned}"
     "</EXTREMELY_IMPORTANT>"
 )
 

@@ -1,5 +1,9 @@
 # Design & UI Rules (read-on-demand)
 
+> **KitchenHQ, 2026-10-17:** that repo's own `DESIGN.md` (the October 2026 direction) is the
+> design authority and outranks this file; the rulebook no longer points here. This file
+> stays for projects that have no design file of their own.
+
 Moved out of the always-loaded `CLAUDE.md` on 2026-07-11 — **nothing was changed, only relocated.**
 These rules apply in full whenever you touch anything visual. The always-loaded file keeps the
 BLOCKING triggers that tell you to come and read this.
